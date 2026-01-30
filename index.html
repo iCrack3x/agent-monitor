@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥷 Agent Health Monitor</title>
+    <meta http-equiv="refresh" content="30">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        header {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border-bottom: 1px solid #30363d;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        header h1 { 
+            font-size: 2.5rem; 
+            background: linear-gradient(135deg, #58a6ff, #a371f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        header p { color: #8b949e; font-size: 1.1rem; }
+        .timestamp {
+            text-align: center;
+            padding: 15px;
+            color: #8b949e;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #21262d;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px 0;
+        }
+        .stat-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-4px); }
+        .stat-card h3 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+        .stat-card p { color: #8b949e; }
+        .stat-card.active { border-color: #3fb950; }
+        .stat-card.active h3 { color: #3fb950; }
+        .stat-card.completed { border-color: #58a6ff; }
+        .stat-card.completed h3 { color: #58a6ff; }
+        .stat-card.stuck { border-color: #f85149; }
+        .stat-card.stuck h3 { color: #f85149; }
+        
+        .section {
+            margin: 40px 0;
+        }
+        .section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #30363d;
+        }
+        .section.active h2 { color: #3fb950; border-color: #3fb950; }
+        .section.completed h2 { color: #58a6ff; border-color: #58a6ff; }
+        .section.stuck h2 { color: #f85149; border-color: #f85149; }
+        
+        .agent-grid {
+            display: grid;
+            gap: 15px;
+        }
+        .agent-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            align-items: center;
+            gap: 20px;
+        }
+        .agent-card:hover {
+            border-color: #58a6ff;
+            background: #1c2128;
+        }
+        .agent-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+        .agent-info h3 {
+            color: #c9d1d9;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        .agent-info p {
+            color: #8b949e;
+            font-size: 0.85rem;
+        }
+        .agent-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+        .agent-stat {
+            text-align: center;
+        }
+        .agent-stat .value {
+            color: #58a6ff;
+            font-weight: 600;
+            display: block;
+        }
+        .agent-stat .label {
+            color: #6e7681;
+            font-size: 0.75rem;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-badge.active {
+            background: rgba(63, 185, 80, 0.2);
+            color: #3fb950;
+        }
+        .status-badge.completed {
+            background: rgba(88, 166, 255, 0.2);
+            color: #58a6ff;
+        }
+        .status-badge.stuck {
+            background: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8b949e;
+        }
+        footer {
+            text-align: center;
+            padding: 40px;
+            border-top: 1px solid #21262d;
+            color: #6e7681;
+            font-size: 0.85rem;
+        }
+        @media (max-width: 768px) {
+            .agent-card {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .agent-stats {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🥷 Agent Health Monitor</h1>
+        <p>Real-time overview of all OpenClaw sub-agents</p>
+    </header>
+    
+    <div class="timestamp">
+        Last updated: 2026-01-30 22:13:25 (refreshes every 30s)
+    </div>
+    
+    <main class="container">
+        <div class="stats-grid">
+            <div class="stat-card active">
+                <h3>0</h3>
+                <p>🟢 Active Agents</p>
+            </div>
+            <div class="stat-card completed">
+                <h3>4</h3>
+                <p>✅ Completed</p>
+            </div>
+            <div class="stat-card stuck">
+                <h3>0</h3>
+                <p>⚠️ Stuck/Idle</p>
+            </div>
+            <div class="stat-card">
+                <h3>4</h3>
+                <p>📊 Total Tracked</p>
+            </div>
+        </div>
+
+        <div class="section completed">
+            <h2>✅ Completed Agents</h2>
+            <div class="agent-grid">
+
+                <div class="agent-card">
+                    <div class="agent-icon">✅</div>
+                    <div class="agent-info">
+                        <h3>unnamed</h3>
+                        <p>direct • kimi-for-coding • Idle: 13m</p>
+                    </div>
+                    <div class="agent-stats">
+                        <div class="agent-stat">
+                            <span class="value">13.8k</span>
+                            <span class="label">tokens</span>
+                        </div>
+                    </div>
+                    <span class="status-badge completed">completed</span>
+                </div>
+
+                <div class="agent-card">
+                    <div class="agent-icon">✅</div>
+                    <div class="agent-info">
+                        <h3>unnamed</h3>
+                        <p>direct • kimi-for-coding • Idle: 13m</p>
+                    </div>
+                    <div class="agent-stats">
+                        <div class="agent-stat">
+                            <span class="value">12.9k</span>
+                            <span class="label">tokens</span>
+                        </div>
+                    </div>
+                    <span class="status-badge completed">completed</span>
+                </div>
+
+                <div class="agent-card">
+                    <div class="agent-icon">✅</div>
+                    <div class="agent-info">
+                        <h3>unnamed</h3>
+                        <p>group • kimi-for-coding • Idle: 132m</p>
+                    </div>
+                    <div class="agent-stats">
+                        <div class="agent-stat">
+                            <span class="value">26.7k</span>
+                            <span class="label">tokens</span>
+                        </div>
+                    </div>
+                    <span class="status-badge completed">completed</span>
+                </div>
+
+                <div class="agent-card">
+                    <div class="agent-icon">✅</div>
+                    <div class="agent-info">
+                        <h3>unnamed</h3>
+                        <p>group • kimi-for-coding • Idle: 189m</p>
+                    </div>
+                    <div class="agent-stats">
+                        <div class="agent-stat">
+                            <span class="value">15.3k</span>
+                            <span class="label">tokens</span>
+                        </div>
+                    </div>
+                    <span class="status-badge completed">completed</span>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+    
+    <footer>
+        <p>Built by Finn 🥷 | Auto-refreshes every 30 seconds</p>
+    </footer>
+</body>
+</html>
