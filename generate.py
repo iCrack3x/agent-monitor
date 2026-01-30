@@ -353,20 +353,30 @@ def get_agent_label(session):
     
     # Try displayName
     display_name = session.get("displayName", "")
-    if display_name:
+    if display_name and display_name != "N/A":
         # Extract clean name from displayName
         if "subagent:" in display_name:
-            return display_name.split("subagent:")[-1][:20]
+            return display_name.split("subagent:")[-1][:25]
         return display_name[:30]
     
-    # Try session key
+    # Try to extract from session key
     key = session.get("key", "")
-    if "subagent:" in key:
-        return key.split("subagent:")[-1][:20]
+    if key:
+        # Extract meaningful part from key
+        parts = key.split(":")
+        if len(parts) >= 3:
+            # agent:second:subagent:XYZ -> return XYZ part
+            if "subagent" in parts:
+                idx = parts.index("subagent")
+                if idx + 1 < len(parts):
+                    return parts[idx + 1][:25]
+            # agent:second:main -> return main
+            return parts[-1][:25]
     
-    # Fallback to shortened session ID
-    session_id = session.get("sessionId", "unknown")
-    return f"agent-{session_id[:8]}"
+    # Fallback to kind + session ID
+    kind = session.get("kind", "unknown")
+    session_id = session.get("sessionId", "unknown")[:6]
+    return f"{kind}-{session_id}"
 
 def render_agent_card(session):
     """Render a single agent card"""
