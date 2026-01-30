@@ -344,9 +344,33 @@ def generate_dashboard(sessions):
     
     return html
 
+def get_agent_label(session):
+    """Extract best label for agent"""
+    # Try label first
+    label = session.get("label")
+    if label and label != "unnamed":
+        return label
+    
+    # Try displayName
+    display_name = session.get("displayName", "")
+    if display_name:
+        # Extract clean name from displayName
+        if "subagent:" in display_name:
+            return display_name.split("subagent:")[-1][:20]
+        return display_name[:30]
+    
+    # Try session key
+    key = session.get("key", "")
+    if "subagent:" in key:
+        return key.split("subagent:")[-1][:20]
+    
+    # Fallback to shortened session ID
+    session_id = session.get("sessionId", "unknown")
+    return f"agent-{session_id[:8]}"
+
 def render_agent_card(session):
     """Render a single agent card"""
-    label = session.get("label", "unnamed")
+    label = get_agent_label(session)
     kind = session.get("kind", "unknown")
     tokens = session.get("totalTokens", 0)
     model = session.get("model", "unknown")
